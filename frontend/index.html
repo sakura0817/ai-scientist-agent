@@ -1,0 +1,797 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AI Scientist MVP</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --panel-soft: #eef5f3;
+        --ink: #17202a;
+        --muted: #607086;
+        --line: #dde5ee;
+        --blue: #2563eb;
+        --green: #0f766e;
+        --amber: #a16207;
+        --red: #b42318;
+        --shadow: 0 18px 42px rgba(23, 32, 42, 0.09);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          linear-gradient(180deg, rgba(37, 99, 235, 0.08), transparent 280px),
+          var(--bg);
+        color: var(--ink);
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        line-height: 1.6;
+      }
+
+      button,
+      textarea {
+        font: inherit;
+      }
+
+      .shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 34px 22px 56px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 380px;
+        gap: 22px;
+        align-items: stretch;
+      }
+
+      .hero-copy {
+        padding: 12px 0;
+      }
+
+      .eyebrow {
+        margin: 0 0 10px;
+        color: var(--green);
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      h1 {
+        max-width: 780px;
+        margin: 0;
+        font-size: clamp(34px, 5vw, 60px);
+        line-height: 1.06;
+        letter-spacing: 0;
+      }
+
+      .lead {
+        max-width: 720px;
+        margin: 18px 0 0;
+        color: #425063;
+        font-size: 17px;
+      }
+
+      .run-card,
+      .panel,
+      .progress,
+      .output-card {
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+      }
+
+      .run-card {
+        padding: 18px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 760;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 142px;
+        resize: vertical;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 12px 13px;
+        color: var(--ink);
+        outline: none;
+      }
+
+      textarea:focus {
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.14);
+      }
+
+      .actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .primary {
+        min-height: 40px;
+        border: 0;
+        border-radius: 8px;
+        padding: 0 15px;
+        background: var(--ink);
+        color: #fff;
+        cursor: pointer;
+        font-weight: 760;
+      }
+
+      .primary:disabled {
+        cursor: not-allowed;
+        opacity: 0.55;
+      }
+
+      .hint {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-line {
+        margin: 12px 0 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status-line.error {
+        color: var(--red);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 320px minmax(0, 1fr);
+        gap: 18px;
+        margin-top: 24px;
+      }
+
+      .progress {
+        padding: 16px;
+        align-self: start;
+        box-shadow: none;
+      }
+
+      .progress h2,
+      .output-card h2 {
+        margin: 0 0 14px;
+        font-size: 18px;
+      }
+
+      .step {
+        display: grid;
+        grid-template-columns: 28px minmax(0, 1fr);
+        gap: 10px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .step:last-child {
+        border-bottom: 0;
+      }
+
+      .step-dot {
+        display: grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #eef2f7;
+        color: #64748b;
+        font-size: 13px;
+        font-weight: 800;
+      }
+
+      .step.done .step-dot {
+        background: #e7f7f2;
+        color: var(--green);
+      }
+
+      .step.active .step-dot {
+        background: #eaf2ff;
+        color: var(--blue);
+      }
+
+      .step.failed .step-dot {
+        background: #fee4e2;
+        color: var(--red);
+      }
+
+      .step-title {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 760;
+      }
+
+      .step-desc {
+        margin: 2px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .output-card {
+        min-height: 620px;
+        overflow: hidden;
+        box-shadow: none;
+      }
+
+      .output-head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 16px;
+        border-bottom: 1px solid var(--line);
+        background: #fbfcfe;
+      }
+
+      .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .tab {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        padding: 7px 11px;
+        background: #fff;
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 13px;
+      }
+
+      .tab.active {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: #fff;
+      }
+
+      .tab:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+      }
+
+      .viewer {
+        min-height: 520px;
+        max-height: 72vh;
+        overflow: auto;
+        padding: 20px 22px 36px;
+      }
+
+      .empty {
+        display: grid;
+        min-height: 360px;
+        place-items: center;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      .markdown {
+        max-width: 920px;
+      }
+
+      .markdown h1,
+      .markdown h2,
+      .markdown h3 {
+        line-height: 1.25;
+        letter-spacing: 0;
+      }
+
+      .markdown h1 {
+        margin: 0 0 18px;
+        font-size: 28px;
+      }
+
+      .markdown h2 {
+        margin: 28px 0 10px;
+        font-size: 22px;
+      }
+
+      .markdown h3 {
+        margin: 22px 0 8px;
+        font-size: 18px;
+      }
+
+      .markdown p {
+        margin: 10px 0;
+      }
+
+      .markdown ul,
+      .markdown ol {
+        padding-left: 22px;
+      }
+
+      .markdown li + li {
+        margin-top: 5px;
+      }
+
+      .markdown code {
+        border: 1px solid #dbe3ea;
+        border-radius: 6px;
+        padding: 1px 5px;
+        background: #f6f8fa;
+        font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+        font-size: 0.92em;
+      }
+
+      .markdown pre {
+        overflow: auto;
+        border: 1px solid #dbe3ea;
+        border-radius: 8px;
+        padding: 14px;
+        background: #0f172a;
+        color: #e5e7eb;
+      }
+
+      .markdown pre code {
+        border: 0;
+        padding: 0;
+        background: transparent;
+        color: inherit;
+      }
+
+      .markdown table {
+        display: block;
+        width: 100%;
+        overflow: auto;
+        border-collapse: collapse;
+        margin: 14px 0;
+      }
+
+      .markdown th,
+      .markdown td {
+        border: 1px solid var(--line);
+        padding: 9px 11px;
+        text-align: left;
+        vertical-align: top;
+        font-size: 14px;
+      }
+
+      .markdown th {
+        background: #f8fafc;
+      }
+
+      .markdown blockquote {
+        margin: 14px 0;
+        border-left: 4px solid #c7d2fe;
+        padding: 6px 0 6px 14px;
+        color: #4b5563;
+        background: #f8fafc;
+      }
+
+      .path-list {
+        display: grid;
+        gap: 6px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      @media (max-width: 920px) {
+        .hero,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .progress {
+          position: static;
+        }
+      }
+
+      @media (max-width: 560px) {
+        .shell {
+          padding: 24px 14px 42px;
+        }
+
+        .actions,
+        .output-head {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .primary {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero" aria-labelledby="title">
+        <div class="hero-copy">
+          <p class="eyebrow">AI Scientist MVP</p>
+          <h1 id="title">输入研究问题，自动生成研究计划</h1>
+          <p class="lead">
+            前端会调用本项目现有 agent 流程，依次完成规划、联网证据挖掘、假设生成、评审、报告写作和参考文献核验，并把生成的 Markdown 结果展示在网页上。
+          </p>
+        </div>
+
+        <form class="run-card" id="runForm">
+          <label for="question">研究问题</label>
+          <textarea id="question" name="question">如何提升 AIGC 文本检测模型的跨模型泛化能力？请用中文回答。</textarea>
+          <div class="actions">
+            <button class="primary" id="runButton" type="submit">运行 Agent</button>
+            <p class="hint">运行会调用远程模型和联网搜索，通常需要等待一段时间。</p>
+          </div>
+          <p class="status-line" id="statusLine">等待输入。</p>
+        </form>
+      </section>
+
+      <section class="grid">
+        <aside class="progress" aria-label="执行进度">
+          <h2>执行进度</h2>
+          <div id="steps"></div>
+        </aside>
+
+        <section class="output-card" aria-label="运行结果">
+          <div class="output-head">
+            <div>
+              <h2>Markdown 输出</h2>
+              <ul class="path-list" id="paths"></ul>
+            </div>
+          </div>
+          <div class="tabs" id="tabs"></div>
+          <div class="viewer" id="viewer">
+            <div class="empty">运行后会在这里显示各阶段结果。</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script>
+      const steps = [
+        ["planner", "Research Planner", "拆解研究问题"],
+        ["evidence", "Web Search Miner", "联网搜索和整理证据"],
+        ["hypotheses", "Hypothesis Generator", "生成候选科学假设"],
+        ["critique", "Critic Reviewer", "评审候选假设"],
+        ["report", "Report Writer", "生成 research_plan.md"],
+        ["reference_check", "Reference Checker", "生成 reference_check.md"],
+        ["final", "Final Writer", "合并 research_plan_with_check.md"],
+      ];
+
+      const tabLabels = {
+        planner: "规划",
+        evidence: "证据",
+        hypotheses: "假设",
+        critique: "评审",
+        report: "研究计划",
+        reference_check: "引用核验",
+        final: "合并版",
+      };
+
+      let currentJobId = null;
+      let currentData = null;
+      let activeTab = "report";
+      let pollTimer = null;
+
+      const form = document.getElementById("runForm");
+      const question = document.getElementById("question");
+      const runButton = document.getElementById("runButton");
+      const statusLine = document.getElementById("statusLine");
+      const stepsBox = document.getElementById("steps");
+      const tabsBox = document.getElementById("tabs");
+      const viewer = document.getElementById("viewer");
+      const paths = document.getElementById("paths");
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderInline(value) {
+        let html = escapeHtml(value);
+        html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+        html = html.replace(/`([^`]+)`/g, "<code>$1</code>");
+        html = html.replace(
+          /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
+          '<a href="$2" target="_blank" rel="noreferrer">$1</a>',
+        );
+        return html;
+      }
+
+      function renderTable(lines) {
+        const rows = lines
+          .filter((line) => !/^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(line))
+          .map((line) =>
+            line
+              .trim()
+              .replace(/^\|/, "")
+              .replace(/\|$/, "")
+              .split("|")
+              .map((cell) => renderInline(cell.trim())),
+          );
+        if (!rows.length) return "";
+        const head = rows[0].map((cell) => `<th>${cell}</th>`).join("");
+        const body = rows
+          .slice(1)
+          .map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join("")}</tr>`)
+          .join("");
+        return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+      }
+
+      function markdownToHtml(markdown) {
+        if (!markdown) return '<div class="empty">当前阶段还没有输出。</div>';
+        const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+        const html = [];
+        let listType = null;
+        let tableLines = [];
+        let inCode = false;
+        let codeLines = [];
+
+        function closeList() {
+          if (listType) {
+            html.push(`</${listType}>`);
+            listType = null;
+          }
+        }
+
+        function closeTable() {
+          if (tableLines.length) {
+            closeList();
+            html.push(renderTable(tableLines));
+            tableLines = [];
+          }
+        }
+
+        for (const rawLine of lines) {
+          const line = rawLine.trimEnd();
+
+          if (line.startsWith("```")) {
+            closeTable();
+            closeList();
+            if (inCode) {
+              html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+              codeLines = [];
+              inCode = false;
+            } else {
+              inCode = true;
+            }
+            continue;
+          }
+
+          if (inCode) {
+            codeLines.push(rawLine);
+            continue;
+          }
+
+          if (/^\s*\|.+\|\s*$/.test(line)) {
+            tableLines.push(line);
+            continue;
+          }
+
+          closeTable();
+
+          if (!line.trim()) {
+            closeList();
+            continue;
+          }
+
+          if (line.startsWith("### ")) {
+            closeList();
+            html.push(`<h3>${renderInline(line.slice(4))}</h3>`);
+          } else if (line.startsWith("## ")) {
+            closeList();
+            html.push(`<h2>${renderInline(line.slice(3))}</h2>`);
+          } else if (line.startsWith("# ")) {
+            closeList();
+            html.push(`<h1>${renderInline(line.slice(2))}</h1>`);
+          } else if (/^\s*[-*]\s+/.test(line)) {
+            if (listType !== "ul") {
+              closeList();
+              listType = "ul";
+              html.push("<ul>");
+            }
+            html.push(`<li>${renderInline(line.replace(/^\s*[-*]\s+/, ""))}</li>`);
+          } else if (/^\s*\d+\.\s+/.test(line)) {
+            if (listType !== "ol") {
+              closeList();
+              listType = "ol";
+              html.push("<ol>");
+            }
+            html.push(`<li>${renderInline(line.replace(/^\s*\d+\.\s+/, ""))}</li>`);
+          } else if (line.startsWith(">")) {
+            closeList();
+            html.push(`<blockquote>${renderInline(line.replace(/^>\s?/, ""))}</blockquote>`);
+          } else if (/^-{3,}$/.test(line.trim())) {
+            closeList();
+            html.push("<hr />");
+          } else {
+            closeList();
+            html.push(`<p>${renderInline(line)}</p>`);
+          }
+        }
+
+        closeTable();
+        closeList();
+        if (inCode) {
+          html.push(`<pre><code>${escapeHtml(codeLines.join("\n"))}</code></pre>`);
+        }
+
+        return `<article class="markdown">${html.join("\n")}</article>`;
+      }
+
+      function renderSteps(job) {
+        const currentIndex = steps.findIndex(([key]) => key === job.current_step);
+        stepsBox.innerHTML = steps
+          .map(([key, title, desc], index) => {
+            const hasOutput = Boolean(job.results && job.results[key]);
+            let cls = "";
+            let mark = index + 1;
+            if (job.status === "failed" && key === job.current_step) {
+              cls = "failed";
+              mark = "!";
+            } else if (hasOutput || (job.status === "done" && index <= currentIndex)) {
+              cls = "done";
+              mark = "✓";
+            } else if (key === job.current_step && job.status === "running") {
+              cls = "active";
+              mark = "…";
+            }
+            return `
+              <div class="step ${cls}">
+                <div class="step-dot">${mark}</div>
+                <div>
+                  <p class="step-title">${title}</p>
+                  <p class="step-desc">${desc}</p>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderTabs(job) {
+        const results = job.results || {};
+        const availableKeys = steps.map(([key]) => key).filter((key) => results[key]);
+        if (!availableKeys.includes(activeTab)) {
+          activeTab = availableKeys.includes("report") ? "report" : availableKeys[availableKeys.length - 1] || "report";
+        }
+        tabsBox.innerHTML = steps
+          .map(([key]) => {
+            const enabled = Boolean(results[key]);
+            return `<button class="tab ${key === activeTab ? "active" : ""}" data-tab="${key}" ${enabled ? "" : "disabled"}>${tabLabels[key]}</button>`;
+          })
+          .join("");
+      }
+
+      function renderPaths(job) {
+        const outputPaths = job.output_paths || {};
+        const items = Object.entries(outputPaths);
+        paths.innerHTML = items.length
+          ? items.map(([name, path]) => `<li>${name}: ${escapeHtml(path)}</li>`).join("")
+          : "<li>输出文件将在任务完成后生成。</li>";
+      }
+
+      function renderViewer(job) {
+        const content = job.results && job.results[activeTab];
+        viewer.innerHTML = markdownToHtml(content);
+      }
+
+      function renderJob(job) {
+        currentData = job;
+        renderSteps(job);
+        renderTabs(job);
+        renderPaths(job);
+        renderViewer(job);
+
+        if (job.status === "queued") {
+          statusLine.className = "status-line";
+          statusLine.textContent = "任务已创建，等待执行。";
+        } else if (job.status === "running") {
+          statusLine.className = "status-line";
+          statusLine.textContent = `正在执行：${job.message || tabLabels[job.current_step] || "处理中"}。`;
+        } else if (job.status === "done") {
+          statusLine.className = "status-line";
+          statusLine.textContent = "运行完成，三个 Markdown 文件已写入 outputs 目录。";
+          runButton.disabled = false;
+        } else if (job.status === "failed") {
+          statusLine.className = "status-line error";
+          statusLine.textContent = `运行失败：${job.error || "未知错误"}`;
+          runButton.disabled = false;
+        }
+      }
+
+      async function pollJob() {
+        if (!currentJobId) return;
+        try {
+          const response = await fetch(`/api/jobs/${currentJobId}`);
+          const data = await response.json();
+          renderJob(data);
+          if (data.status === "done" || data.status === "failed") {
+            clearInterval(pollTimer);
+            pollTimer = null;
+          }
+        } catch (error) {
+          statusLine.className = "status-line error";
+          statusLine.textContent = `轮询失败：${error.message}`;
+          runButton.disabled = false;
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+
+      tabsBox.addEventListener("click", (event) => {
+        const button = event.target.closest(".tab");
+        if (!button || button.disabled) return;
+        activeTab = button.dataset.tab;
+        if (currentData) {
+          renderTabs(currentData);
+          renderViewer(currentData);
+        }
+      });
+
+      form.addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const value = question.value.trim();
+        if (!value) {
+          statusLine.className = "status-line error";
+          statusLine.textContent = "请先输入研究问题。";
+          return;
+        }
+
+        runButton.disabled = true;
+        statusLine.className = "status-line";
+        statusLine.textContent = "正在创建任务...";
+        viewer.innerHTML = '<div class="empty">任务运行中，请稍等。</div>';
+        paths.innerHTML = "<li>输出文件将在任务完成后生成。</li>";
+
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+
+        try {
+          const response = await fetch("/api/run", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ question: value }),
+          });
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || "创建任务失败");
+          }
+          currentJobId = data.job_id;
+          activeTab = "planner";
+          await pollJob();
+          pollTimer = setInterval(pollJob, 1800);
+        } catch (error) {
+          statusLine.className = "status-line error";
+          statusLine.textContent = error.message;
+          runButton.disabled = false;
+        }
+      });
+
+      renderSteps({ status: "idle", current_step: "", results: {} });
+      renderTabs({ results: {} });
+    </script>
+  </body>
+</html>
